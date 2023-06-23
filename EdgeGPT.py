@@ -17,6 +17,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Generator
 from typing import Union
+from time import time
 
 import aiofiles
 
@@ -584,15 +585,29 @@ class _ChatHub:
             )
         # Send request
         await self.wss.send_str(_append_identifier(self.request.struct))
-        final = False
         draw = False
         resp_txt = ""
         result_text = ""
         resp_txt_no_link = ""
-        while not final:
+        retry_count = 5
+        while True:
+            if self.wss.closed:
+                break
             msg = await self.wss.receive(timeout=900)
-            objects = msg.data.split(DELIMITER)
+            if not msg:
+                retry_count -= 1
+                if retry_count == 0:
+                    raise Exception("No response from server")
+                continue
+            if isinstance(msg.data, str):
+                objects = msg.data.split(DELIMITER)
+            else:
+                continue
             for obj in objects:
+                if int(time()) % 6 == 0:
+                    await self.wss.send_str(_append_identifier({"type": 6}))
+                if obj is None or not obj:
+                    continue
                 if obj is None or not obj:
                     continue
                 response = json.loads(obj)
@@ -602,13 +617,13 @@ class _ChatHub:
                     "messages",
                 ):
                     if not draw:
-                        if (len(response["arguments"][0]["messages"]>=3) ) and (
-                            response["arguments"][0]["messages"][2].get("messageType")
+                        if (
+                            response["arguments"][0]["messages"][0].get("messageType",)
                             == "GenerateContentQuery"
                         ):
                             async with ImageGenAsync(all_cookies=self.cookies) as image_generator:
                                 images = await image_generator.get_images(
-                                    response["arguments"][0]["messages"][2]["text"],
+                                    response["arguments"][0]["messages"][0]["text"],
                                 )
                             for i, image in enumerate(images):
                                 resp_txt = f"{resp_txt}\n![image{i}]({image})"
@@ -681,13 +696,18 @@ class _ChatHub:
                             "Preserved the message from being deleted",
                             file=sys.stderr,
                         )
-                    final = True
                     await self.close()
                     yield True, response
+                    return
+                elif response.get("type") == 6:
+                    await self.wss.send_str(_append_identifier({"type": 6}))
+                elif response.get("type") == 7:
+                    await self.wss.send_str(_append_identifier({"type": 7}))
 
     async def _initial_handshake(self) -> None:
         await self.wss.send_str(_append_identifier({"protocol": "json", "version": 1}))
         await self.wss.receive(timeout=900)
+        await self.wss.send_str(_append_identifier({"type": 6}))
 
     async def close(self) -> None:
         if self.wss and not self.wss.closed:
