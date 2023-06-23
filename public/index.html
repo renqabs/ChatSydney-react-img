@@ -506,7 +506,7 @@
                         let message_ = response.item.messages[response.item.messages.length - 2]
                         const message = message_
                         if (message.text) {
-                            if (message.adaptiveCards[0].body[0].text.indexof("[image") !== -1){
+                            if (message.adaptiveCards[0].body[0].text.indexOf("[image") !== -1){
                             updateMessage({
                                 text: message.adaptiveCards[0].body[0].text,
                                 hiddenText: message.text !== message.adaptiveCards[0].body[0].text ? message.text : null,
