@@ -1,0 +1,137 @@
+body {
+    font-family: "Microsoft YaHei", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: url("background.png");
+    background-size: cover;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    max-width: 1184px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.heading {
+    color: #444;
+    font-size: 1.5em;
+    margin-bottom: 2px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+
+.button[disabled] {
+    background-color: gray;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    box-sizing: border-box;
+    font-family: "Microsoft YaHei", sans-serif;
+}
+
+.selector {
+    margin-bottom: 10px;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 0.3px 0.9px rgba(0, 0, 0, 0.12), 0 1.6px 3.6px rgba(0, 0, 0, 0.16);
+    font-size: 16px;
+    width: fit-content;
+    max-width: 768px;
+    position: relative;
+}
+
+.user-message {
+    color: white;
+    background-image: linear-gradient(90deg, #904887 10.79%, #8B257E 87.08%);
+    align-self: flex-end;
+}
+
+.assistant-message {
+    background-color: rgba(255, 255, 255, 0.6);
+}
+
+.other-message {
+    background-color: rgba(255, 255, 255, 0.3);
+    align-self: flex-end;
+}
+
+.message * {
+    margin-block: 0;
+}
+
+.add-button, .delete-button, .edit-button {
+    box-shadow: 0 0.3px 0.9px rgba(0, 0, 0, 0.12), 0 1.6px 3.6px rgba(0, 0, 0, 0.16);
+    position: absolute;
+    top: -36px;
+    background-color: white;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    line-height: 36px;
+    cursor: pointer;
+}
+
+.delete-button {
+    right: 0;
+}
+
+.edit-button {
+    right: 36px;
+}
+
+.add-button {
+    right: 72px;
+}
+
+.add-button:hover, .delete-button:hover, .edit-button:hover {
+    background-color: rgb(255, 255, 255, 0.06);
+}
+
+img[alt^="image"] {
+  width: 100px;
+  height: 100px;
+}
