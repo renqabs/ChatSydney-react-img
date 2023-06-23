@@ -502,15 +502,17 @@
                         }
                     } else if (response.type === 2) {
                         // Image Generate support
-                        if (response.item.messages.length == 3){
+                        if (response.item.messages.length === 3){
                         let message_ = response.item.messages[response.item.messages.length - 2]
                         const message = message_
                         if (message.text) {
+                            if (message.adaptiveCards[0].body[0].text.indexof("[image") !== -1){
                             updateMessage({
                                 text: message.adaptiveCards[0].body[0].text,
                                 hiddenText: message.text !== message.adaptiveCards[0].body[0].text ? message.text : null,
                                 suggestions: acceptSuggestions ? message.suggestedResponses?.map(res => res.text) : []
                             })
+                          }
                         }
                         else {
                             continueOnRevoke || alert("Looks like the user message has triggered the Bing filter")
