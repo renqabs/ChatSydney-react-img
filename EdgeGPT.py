@@ -612,7 +612,12 @@ class _ChatHub:
                     continue
                 response = json.loads(obj)
                 if response.get("type") != 2 and raw:
-                    yield False, response
+                    if response.get("type") == 6:
+                        await self.wss.send_str(_append_identifier({"type": 6}))
+                    elif response.get("type") == 7:
+                        await self.wss.send_str(_append_identifier({"type": 7}))
+                    else:
+                        yield False, response
                 elif response.get("type") == 1 and response["arguments"][0].get(
                     "messages",
                 ):
