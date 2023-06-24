@@ -22,7 +22,7 @@ async def sydney_process_message(user_message, context, _U, locale):
         #else:
         cookies = loaded_cookies
         chatbot = await Chatbot.create(cookies=cookies, proxy=args.proxy)
-        async for _, response in chatbot.ask_stream(prompt=user_message, conversation_style="creative", raw=True,
+        async for _, response in chatbot.ask_stream(prompt=user_message, conversation_style="creative",
                                                     webpage_context=context, search_result=True, locale=locale):
             yield response
     except:
