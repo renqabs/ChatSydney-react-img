@@ -408,7 +408,9 @@
                     if (!continueOnRevoke) break
                     if (result?.revoked) {
                         inputText = "Continue from your last sentence."
-                    } else {
+                    }else if(result?.revoked_auth){
+                        continue
+                    }else {
                         break
                     }
                 }
@@ -518,7 +520,12 @@
                     finished()
 
                     } else if (response.type === "error") {
-                        reject(response.error)
+                        if (response.error.indexOf("Sorry, you need to login first to access this service") !== -1 || response.error.indexOf("Cannot retrieve user status") !== -1){
+                            finished({revoked_auth: true})
+                        }
+                        else{ 
+                            reject(response.error)
+                        }
                     }
                 }
                 else if (botType === "Claude") websocket.onmessage = (event) => {
