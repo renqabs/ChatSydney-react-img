@@ -132,6 +132,8 @@ body {
 }
 
 img[alt^="image"] {
-  width: 100px;
-  height: 100px;
+  width: 206px;
+  height: 206px;
+  border: 5px solid transparent;
+  border-radius: 15px;
 }
