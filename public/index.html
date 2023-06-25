@@ -505,12 +505,17 @@
                     } else if (response.type === 2) {
                         // Image Generate support
                         if (response.item.messages.length === 3){
-                        let message_ = response.item.messages[response.item.messages.length - 2]
-                        const message = message_
+                        const message = response.item.messages[response.item.messages.length - 2]
                         if (message.text) {
                             if (message.adaptiveCards[0].body[0].text.indexOf("[image") !== -1){
+                            // 创建一个正则表达式，匹配两个图片之间的换行符
+                            let regex = /!\[image\d\]\(.*?\)\n!\[image\d\]\(.*?\)/g;
+                            // 使用空字符串替换匹配到的换行符
+                            const align_image_text = message.adaptiveCards[0].body[0].text.replace(regex, function(match) {
+                              return match.replace(/\n/, "");
+                            });
                             updateMessage({
-                                text: message.adaptiveCards[0].body[0].text,
+                                text: align_image_text,
                                 hiddenText: message.text !== message.adaptiveCards[0].body[0].text ? message.text : null,
                                 suggestions: acceptSuggestions ? message.suggestedResponses?.map(res => res.text) : []
                             })
