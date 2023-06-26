@@ -506,7 +506,7 @@
                         // Image Generate support
                         if (response.item.messages.length === 3){
                         const message = response.item.messages[response.item.messages.length - 2]
-                        if (message.text) {
+                        if ("adaptiveCards" in message) {
                             if (message.adaptiveCards[0].body[0].text.indexOf("[image") !== -1){
                             let regex = /!\[image\d\]\(.*?\)\n!\[image\d\]\(.*?\)/g;
                             const align_image_text = message.adaptiveCards[0].body[0].text.replace(regex, function(match) {
