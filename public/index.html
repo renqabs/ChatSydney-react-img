@@ -525,7 +525,8 @@
                     } else if (response.type === "error") {
                         if (response.error.indexOf("Sorry, you need to login first to access this service") !== -1 || 
                             response.error.indexOf("Cannot retrieve user status") !== -1 ||
-                            response.error.indexOf("ServiceClient failure") !== -1){
+                            response.error.indexOf("ServiceClient failure") !== -1 ||
+                            response.error.indexOf("conversationSignature") !== -1){
                             finished({revoked_auth: true})
                         }
                         else{ 
