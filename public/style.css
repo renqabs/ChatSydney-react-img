@@ -134,6 +134,11 @@ body {
 img[alt^="image"] {
   width: 206px;
   height: 206px;
-  border: 5px solid transparent;
+  border: 6px solid transparent;
   border-radius: 15px;
+  transition: transform 0.3s;
+}
+
+img[alt^="image"]:hover {
+  transform: scale(1.1);
 }
