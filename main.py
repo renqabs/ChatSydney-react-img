@@ -7,7 +7,7 @@ import urllib.request
 import emoji
 import claude
 
-from EdgeGPT import Chatbot
+from SydneyGPT.SydneyGPT import Chatbot
 from aiohttp import web
 
 public_dir = '/public'
