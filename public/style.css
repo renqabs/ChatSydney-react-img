@@ -137,8 +137,15 @@ img[alt^="image"] {
   border: 6px solid transparent;
   border-radius: 15px;
   transition: transform 0.3s;
+  object-fit: contain;
 }
 
 img[alt^="image"]:hover {
   transform: scale(1.1);
+}
+
+/* 选择image-file元素 */
+#image-file {
+  margin-top: 20px;
+  margin-left: 10px;
 }

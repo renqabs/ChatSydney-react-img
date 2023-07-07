@@ -21,6 +21,7 @@
     import remarkGfm from 'https://cdn.skypack.dev/remark-gfm?min'
     import * as Tiktoken from 'https://cdn.skypack.dev/js-tiktoken?min'
     import SyntaxHighlighter from 'https://esm.sh/react-syntax-highlighter@15.5.0?bundle'
+    import Resizer from 'https://cdn.skypack.dev/react-image-file-resizer@0.4.8?min'
 
     const enc = Tiktoken.encodingForModel("gpt-4");
 
@@ -298,6 +299,10 @@
             }
             return result
         }).join("\n\n")
+        // match upload image
+        let regex = /!\[.*\)\n/g;
+        // delete upload image
+        formatted = formatted.replace(regex, "");
         if (botType === "Sydney") {
             if (enc.encode(formatted).length > 10000) {
                 // Assume the first message is system message
@@ -381,7 +386,34 @@
         const [editingMessageIndex, setEditingMessageIndex] = React.useState(null)
         const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
         const [_UOverride, set_UOverride] = React.useState(localStorage.getItem('_U'))
+        const imageUploadInput = React.useRef(null);
+        const [imageInput, setImageInput] = React.useState('')
         const [botType, setBotType] = React.useState(localStorage.getItem('botType') || "Sydney")
+        const resizeFile = (file, type) =>
+            new Promise((resolve) => {
+                Resizer.imageFileResizer(
+                file,
+                1920,
+                1080,
+                "JPEG",
+                90,
+                0,
+                (uri) => {
+                    resolve(uri);
+                },
+                type
+                );
+            });
+
+        const handleUploadImage = async event => {
+            let image_uri = "";
+            let file = event.target.files[0];
+            image_uri = await resizeFile(file, "base64");
+            if (image_uri.split(",")[1].length /1024 > 1024) {
+                 throw Error("Picture too large.");
+            }
+            setImageInput(image_uri)
+        }
         const appendMessage = message => {
             setPreviousMessages(prevMessages => [...prevMessages, message])
         }
@@ -403,7 +435,11 @@
             setUserInput('')
             try {
                 while (true) {
-                    appendMessage({tag: "[user](#message)", text: inputText})
+                    let inputText_ = inputText
+                    if (imageInput.length > 0){
+                        inputText_ = inputText + "\n![image_up](" + imageInput + ")\n";
+                    }
+                    appendMessage({tag: "[user](#message)", text: inputText_})
                     const result = await streamOutput(inputText)
                     if (!continueOnRevoke) break
                     if (result?.revoked) {
@@ -424,7 +460,7 @@
             async function connectWebSocket() {
                 return new Promise((resolve, reject) => {
                     websocket = new WebSocket(`wss://${window.location.host}/ws/`)
-                    websocket.timeoutInterval = 30000;
+
                     websocket.onopen = () => {
                         resolve()
                     }
@@ -438,6 +474,7 @@
             await connectWebSocket()
 
             let currentPreviousMessages
+            let oldSuggestions = null
             setPreviousMessages(previousMessages => currentPreviousMessages = previousMessages)
 
             websocket.send(JSON.stringify({
@@ -445,20 +482,24 @@
                 context: formatPreviousMessages(currentPreviousMessages, botType),
                 _U: _UOverride,
                 locale: locale,
+                imageInput: imageInput,
                 botType
             }))
-
             return new Promise((resolve, reject) => {
                 function finished(result) {
                     websocket.close()
+                    setImageInput("")
+                    imageUploadInput.current.value = ''
+                    oldSuggestions = null
                     resolve(result)
                 }
-                function sleep(ms) {
-                    return new Promise (resolve => setTimeout (resolve, ms));
-                }
                 const oldReject = reject
+
                 reject = function() {
                     websocket.close()
+                    setImageInput("")
+                    imageUploadInput.current.value = ''
+                    oldSuggestions = null
                     oldReject.apply(this, arguments)
                 }
                 const currentMessagesLength = currentPreviousMessages.length
@@ -494,32 +535,41 @@
                                     updateMessage({revoked: true})
                                     finished({revoked: true})
                                 } else {
+                                    if (oldSuggestions == null){
+                                      oldSuggestions = acceptSuggestions ? message.suggestedResponses?.map(res => res.text) : []
+                                    }
                                     updateMessage({
                                         text: message.adaptiveCards[0].body[0].text,
                                         hiddenText: message.text !== message.adaptiveCards[0].body[0].text ? message.text : null,
-                                        suggestions: acceptSuggestions ? message.suggestedResponses?.map(res => res.text) : []
+                                        suggestions: oldSuggestions
                                     })
                                 }
                                 break
                         }
                     } else if (response.type === 2) {
                         // Image Generate support
-                        if (response.item.messages.length === 3){
-                        const message = response.item.messages[response.item.messages.length - 2]
-                        if ("adaptiveCards" in message) {
-                            if (message.adaptiveCards[0].body[0].text.indexOf("[image") !== -1){
+                        let message_img = null
+                        let message_all = response.item.messages.slice(1)
+                        for (let message_key in message_all){
+                            if ("adaptiveCards" in message_all[message_key]){
+                                    if ("text" in message_all[message_key].adaptiveCards[0].body[0]){
+                                        if (message_all[message_key].adaptiveCards[0].body[0].text.indexOf("[image") !== -1)
+                                            message_img = message_all[message_key]
+                                            break
+                                    }
+                            }
+                        }
+                        if (message_img !== null) {
                             let regex = /!\[image\d\]\(.*?\)\n!\[image\d\]\(.*?\)/g;
-                            const align_image_text = message.adaptiveCards[0].body[0].text.replace(regex, function(match) {
+                            const align_image_text = message_img.adaptiveCards[0].body[0].text.replace(regex, function(match) {
                               return match.replace(/\n/, "");
                             });
                             updateMessage({
                                 text: align_image_text,
-                                hiddenText: message.text !== message.adaptiveCards[0].body[0].text ? message.text : null,
-                                suggestions: acceptSuggestions ? message.suggestedResponses?.map(res => res.text) : []
+                                hiddenText: message_img.text !== message_img.adaptiveCards[0].body[0].text ? message_img.text : null,
+                                suggestions: oldSuggestions
                             })
-                          }
                         }
-                    }
                     finished()
 
                     } else if (response.type === "error") {
@@ -528,6 +578,9 @@
                             response.error.indexOf("ServiceClient failure") !== -1 ||
                             response.error.indexOf("conversationSignature") !== -1){
                             finished({revoked_auth: true})
+                        }
+                        else if(response.error.indexOf("no close frame received") !== -1){
+                            finished({revoked: true})
                         }
                         else{ 
                             reject(response.error)
@@ -767,6 +820,10 @@
                                 set_UOverride(event.target.value)
                                 localStorage.setItem('_U', event.target.value)
                             }} value={_UOverride} placeholder="Enter cookie here"/>
+                        </label>
+                        <label>upload image:&nbsp;
+                            <input type="file" id="image-file" accept="image/*" ref={imageUploadInput}
+                            onChange={handleUploadImage}/>
                         </label>
                     </div>
                 </div>
