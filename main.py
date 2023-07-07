@@ -72,7 +72,7 @@ async def websocket_handler(request):
                 context = request['context']
                 locale = request['locale']
                 _U = request.get('_U')
-                if len(request.get('imageInput')) > 0:
+                if (request.get('imageInput') is not None) and (len(request.get('imageInput')) > 0):
                     imageInput = request.get('imageInput').split(",")[1]
                 else:
                     imageInput = None
