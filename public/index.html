@@ -290,13 +290,15 @@
             }]
         }
         let formatted = messages.map(message => {
-            let result = `${message.tag}\n${message.hiddenText ?? message.text}`
+            let result = `${message.tag}\n${message.text || ""}`
+	    /*
             if (message.suggestions) {
                 result += `\n\n[assistant](#suggestions)\n\`\`\`json\n{"suggestedUserResponses": ${JSON.stringify(message.suggestions)}}\n\`\`\``
             }
             if (message.searchResults) {
                 result += `\n\n[assistant](#search_results)\`\`\`json\n${message.searchResults}\n\`\`\``
             }
+	    */
             return result
         }).join("\n\n")
         // match upload image
