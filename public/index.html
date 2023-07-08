@@ -408,6 +408,7 @@
             });
 
         const handleUploadImage = async event => {
+	    setResponding(true);
             let image_uri = "";
             let file = event.target.files[0];
             image_uri = await resizeFile(file, "base64");
@@ -415,6 +416,7 @@
                  throw Error("Picture too large.");
             }
             setImageInput(image_uri)
+	    setResponding(false);
         }
         const appendMessage = message => {
             setPreviousMessages(prevMessages => [...prevMessages, message])
