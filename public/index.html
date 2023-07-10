@@ -701,6 +701,8 @@
 
         const stopMessage = () => {
             websocket.close();
+            setImageInput("");
+            imageUploadInput.current.value = '';
             setResponding(false);
         };
 
@@ -730,7 +732,11 @@
                         <button
                             className="button"
                             disabled={responding}
-                            onClick={() => setPreviousMessages(defaultMessages)}
+                            onClick={() => {
+                              setImageInput("");
+                              imageUploadInput.current.value = '';
+                              setPreviousMessages(defaultMessages);
+                            }}
                         >
                             Clear
                         </button>
