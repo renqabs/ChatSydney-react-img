@@ -167,7 +167,7 @@ class ChatHub:
                                 == "GenerateContentQuery"
                             ):
                                 async with ImageGenAsync(
-                                    auth_cookie=os.environ.get('image_gen_cookie')
+                                    all_cookies=self.cookies
                                 ) as image_generator:
                                     images = await image_generator.get_images(
                                         response["arguments"][0]["messages"][0]["text"],
