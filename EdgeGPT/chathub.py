@@ -8,7 +8,7 @@ from time import time
 from typing import Generator
 from typing import List
 from typing import Union
-
+import aiohttp
 from websockets.client import connect, WebSocketClientProtocol
 import certifi
 import httpx
@@ -23,7 +23,6 @@ from .request import ChatHubRequest
 from .utilities import append_identifier
 from .utilities import get_ran_hex
 from .utilities import guess_locale
-
 ssl_context = ssl.create_default_context()
 ssl_context.load_verify_locations(certifi.where())
 
@@ -61,7 +60,11 @@ class ChatHub:
             timeout=900,
             headers=HEADERS_INIT_CONVER,
         )
-
+        cookies = {}
+        if self.cookies is not None:
+            for cookie in self.cookies:
+                cookies[cookie["name"]] = cookie["value"]
+        self.aio_session = aiohttp.ClientSession(cookies=cookies)
     async def get_conversation(
         self,
         conversation_id: str = None,
@@ -99,26 +102,16 @@ class ChatHub:
         locale: str = guess_locale(),
     ) -> Generator[bool, Union[dict, str], None]:
         """ """
-        # add cookies
         req_header = HEADERS
-        if self.cookies is not None:
-            ws_cookies = []
-            for cookie in self.cookies:
-                ws_cookies.append(f"{cookie['name']}={cookie['value']}")
-            req_header.update({
-                'Cookie': ';'.join(ws_cookies),
-            })
-
         # Check if websocket is closed
-        async with connect(
+        async with self.aio_session.ws_connect(
             wss_link or "wss://sydney.bing.com/sydney/ChatHub",
-            extra_headers={
+            ssl=ssl_context,
+            headers={
                 **req_header, 
                 "x-forwarded-for": f"13.{random.randint(104, 107)}.{random.randint(0, 255)}.{random.randint(1, 255)}",
             },
-            max_size=None,
-            ssl=ssl_context,
-            ping_interval=None,
+            proxy=self.proxy,
         ) as wss:
             await self._initial_handshake(wss)
             # Construct a ChatHub request
@@ -130,7 +123,7 @@ class ChatHub:
                 locale=locale,
             )
             # Send request
-            await wss.send(append_identifier(self.request.struct))
+            await wss.send_str(append_identifier(self.request.struct))
             draw = False
             resp_txt = ""
             result_text = ""
@@ -139,19 +132,19 @@ class ChatHub:
             while True:
                 if wss.closed:
                     break
-                msg = await wss.recv()
-                if not msg:
+                msg = await wss.receive(timeout=900)
+                if not msg.data:
                     retry_count -= 1
                     if retry_count == 0:
                         raise Exception("No response from server")
                     continue
-                if isinstance(msg, str):
-                    objects = msg.split(DELIMITER)
+                if isinstance(msg.data, str):
+                    objects = msg.data.split(DELIMITER)
                 else:
                     continue
                 for obj in objects:
                     if int(time()) % 6 == 0:
-                        await wss.send(append_identifier({"type": 6}))
+                        await wss.send_str(append_identifier({"type": 6}))
                     if obj is None or not obj:
                         continue
                     response = json.loads(obj)
@@ -238,16 +231,16 @@ class ChatHub:
                         return
                     if response.get("type") != 2:
                         if response.get("type") == 6:
-                            await wss.send(append_identifier({"type": 6}))
+                            await wss.send_str(append_identifier({"type": 6}))
                         elif response.get("type") == 7:
-                            await wss.send(append_identifier({"type": 7}))
+                            await wss.send_str(append_identifier({"type": 7}))
                         elif raw:
                             yield False, response
 
     async def _initial_handshake(self, wss: WebSocketClientProtocol) -> None:
-        await wss.send(append_identifier({"protocol": "json", "version": 1}))
-        await wss.recv()
-        await wss.send(append_identifier({"type": 6}))
+        await wss.send_str(append_identifier({"protocol": "json", "version": 1}))
+        await wss.receive_str()
+        await wss.send_str(append_identifier({"type": 6}))
 
     async def delete_conversation(
         self,
@@ -274,3 +267,4 @@ class ChatHub:
 
     async def close(self) -> None:
         await self.session.aclose()
+        await self.aio_session.close()
