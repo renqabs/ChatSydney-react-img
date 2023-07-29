@@ -22,8 +22,10 @@
     import * as Tiktoken from 'https://cdn.skypack.dev/js-tiktoken?min'
     import SyntaxHighlighter from 'https://esm.sh/react-syntax-highlighter@15.5.0?bundle'
     import Resizer from 'https://cdn.skypack.dev/react-image-file-resizer@0.4.8?min'
-
+    import {TTS} from './tts.js'
+    const speaker = new TTS();
     const enc = Tiktoken.encodingForModel("gpt-4");
+
 
     function messageClass(tag) {
         if (tag.startsWith('[user]')) {
@@ -390,6 +392,7 @@
         const [_UOverride, set_UOverride] = React.useState(localStorage.getItem('_U'))
         const imageUploadInput = React.useRef(null);
         const [imageInput, setImageInput] = React.useState('')
+        const [enableTTS, setEnableTTS] = React.useState(false)
         const [botType, setBotType] = React.useState(localStorage.getItem('botType') || "Sydney")
         const resizeFile = (file, type) =>
             new Promise((resolve) => {
@@ -446,6 +449,9 @@
             try {
                 while (true) {
                     let inputText_ = inputText
+                    if (enableTTS){
+                        speaker.reset();
+                    }
                     if (imageInput.length > 0){
                         inputText_ = inputText + "\n![image_up](" + imageInput + ")\n";
                     }
@@ -455,7 +461,7 @@
                     if (result?.revoked) {
                         inputText = "Continue from your last sentence."
                     }else if(result?.revoked_auth){
-			removeLastestMessage()
+			            removeLastestMessage()
                         continue
                     }else {
                         break
@@ -568,12 +574,15 @@
                         // Image Generate support
                         let message_img = null
                         let message_all = response.item.messages.slice(1)
+                        let raw_rsp_text= []
                         for (let message_key in message_all){
                             if ("adaptiveCards" in message_all[message_key]){
                                     if ("text" in message_all[message_key].adaptiveCards[0].body[0]){
-                                        if (message_all[message_key].adaptiveCards[0].body[0].text.indexOf("[image") !== -1)
+                                        raw_rsp_text.push(message_all[message_key].adaptiveCards[0].body[0].text)
+                                        if (message_all[message_key].adaptiveCards[0].body[0].text.indexOf("[image") !== -1){
                                             message_img = message_all[message_key]
                                             break
+                                            }
                                     }
                             }
                         }
@@ -588,7 +597,10 @@
                                 suggestions: oldSuggestions
                             })
                         }
-                    finished()
+                        if (raw_rsp_text.length > 0 && enableTTS) {
+                            speaker.speak(raw_rsp_text.join());
+                        }
+                        finished()
 
                     } else if (response.type === "error") {
                         if (response.error.indexOf("Sorry, you need to login first to access this service") !== -1 || 
@@ -710,6 +722,9 @@
             websocket.close();
             setImageInput("");
             imageUploadInput.current.value = '';
+            if (enableTTS){
+               speaker.abort();
+            }
             setResponding(false);
         };
 
@@ -761,6 +776,10 @@
                         >
                             Save
                         </button>
+                        <label class="switch">
+                           <input type="checkbox" checked={enableTTS} onChange={event => setEnableTTS(event.target.checked)}/>
+                           <span class="slider round" title="Enable Response Voice"></span>
+                        </label>
                     </div>
                     <div className="messages" id="messages">
                         {previousMessages.map((msg, index) =>
