@@ -18,7 +18,7 @@ async def sydney_process_message(user_message, context, _U, locale, imageInput):
     chatbot = None
     try:
         if _U:
-            cookies = loaded_cookies + [{"name": "_U", "value": _U}]
+            cookies = list(filter(lambda d: d.get('name') != '_U', loaded_cookies)) + [{"name": "_U", "value": _U}]
         else:
             cookies = loaded_cookies
         chatbot = await Chatbot.create(cookies=cookies, proxy=args.proxy, imageInput=imageInput)
