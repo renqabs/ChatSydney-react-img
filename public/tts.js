@@ -30,7 +30,7 @@ export class TTS {
     const lines = text.split('\n');
     const filteredLines = lines.filter(line => !line.includes(']: http'));
     const cleanedText = filteredLines.join('\n').replace(/\[\^\d+\^\]/g, '').replace(/\[\d+\]/g, '').replace(/\n!\[image\d\]\(.*?\)/g, '');
-    this.currentText = cleanedText.replace(/[^\u4e00-\u9fa5_a-zA-Z0-9，。？,：.,:\n]+/g, '')
+    this.currentText = cleanedText.replace(/[^\u4e00-\u9fa5_a-zA-Z0-9，。？,：.,:?（）！()!~\n]+/g, '')
     this.finished = false;
     this.loop();
   }
@@ -38,7 +38,7 @@ export class TTS {
   async doSpeek() {
     return new Promise((resolve) => {
       const endIndex = this.finished ? this.currentText.length :
-        Math.max(this.currentText.lastIndexOf('。'), this.currentText.lastIndexOf('？'), this.currentText.lastIndexOf('\n'))
+        Math.max(this.currentText.lastIndexOf('。'), this.currentText.lastIndexOf('？'), this.currentText.lastIndexOf('\n'), this.currentText.lastIndexOf('）'))
       const startIndex = this.speakText.length ? Math.max(0, this.currentText.lastIndexOf(this.speakText) + this.speakText.length) : 0
 
       if (startIndex >= endIndex) {
