@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 public_dir = '/public'
 
-from SydneyGPT.SydneyGPT import Chatbot
+from EdgeGPT.EdgeGPT import Chatbot
 from aiohttp import web
 
 
