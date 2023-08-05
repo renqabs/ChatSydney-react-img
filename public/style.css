@@ -132,15 +132,27 @@ body {
 }
 
 img[alt^="image"] {
+  border-radius: 15px;
   width: 206px;
   height: 206px;
   border: 6px solid transparent;
-  border-radius: 15px;
   transition: transform 0.3s;
-  object-fit: contain;
 }
 
 img[alt^="image"]:hover {
+  transform: scale(1.1);
+}
+
+
+img[alt="up_image"] {
+  border-radius: 15px;
+  width: 206px;
+  height: auto;
+  border: 6px solid transparent;
+  transition: transform 0.3s;
+}
+
+img[alt="up_image"]:hover {
   transform: scale(1.1);
 }
 
