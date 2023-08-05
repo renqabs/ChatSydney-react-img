@@ -453,7 +453,7 @@
                         speaker.reset();
                     }
                     if (imageInput.length > 0){
-                        inputText_ = inputText + "\n![image_up](" + imageInput + ")\n";
+                        inputText_ = inputText + "\n![up_image](" + imageInput + ")\n";
                     }
                     appendMessage({tag: "[user](#message)", text: inputText_})
                     const result = await streamOutput(inputText)
