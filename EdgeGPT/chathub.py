@@ -34,6 +34,7 @@ class ChatHub:
         proxy: str = None,
         cookies: Union[List[dict], None] = None,
     ) -> None:
+        self.aio_session = None
         self.request: ChatHubRequest
         self.loop: bool
         self.task: asyncio.Task
@@ -54,17 +55,13 @@ class ChatHub:
             or None
         )
         if proxy is not None and proxy.startswith("socks5h://"):
-            proxy = "socks5://" + proxy[len("socks5h://") :]
+            proxy = "socks5://" + proxy[len("socks5h://"):]
         self.session = httpx.AsyncClient(
             proxies=proxy,
             timeout=900,
             headers=HEADERS_INIT_CONVER,
         )
-        cookies = {}
-        if self.cookies is not None:
-            for cookie in self.cookies:
-                cookies[cookie["name"]] = cookie["value"]
-        self.aio_session = aiohttp.ClientSession(cookies=cookies)
+
     async def get_conversation(
         self,
         conversation_id: str = None,
@@ -102,9 +99,14 @@ class ChatHub:
         locale: str = guess_locale(),
     ) -> Generator[bool, Union[dict, str], None]:
         """ """
+        cookies = {}
+        if self.cookies is not None:
+            for cookie in self.cookies:
+                cookies[cookie["name"]] = cookie["value"]
+        self.aio_session = aiohttp.ClientSession(cookies=cookies)
         req_header = HEADERS
         # Check if websocket is closed
-        async with self.aio_session.ws_connect(
+        wss = await self.aio_session.ws_connect(
             wss_link or "wss://sydney.bing.com/sydney/ChatHub",
             ssl=ssl_context,
             headers={
@@ -112,130 +114,128 @@ class ChatHub:
                 "x-forwarded-for": f"13.{random.randint(104, 107)}.{random.randint(0, 255)}.{random.randint(1, 255)}",
             },
             proxy=self.proxy,
-        ) as wss:
-            await self._initial_handshake(wss)
-            # Construct a ChatHub request
-            self.request.update(
-                prompt=prompt,
-                conversation_style=conversation_style,
-                webpage_context=webpage_context,
-                search_result=search_result,
-                locale=locale,
-            )
-            # Send request
-            await wss.send_str(append_identifier(self.request.struct))
-            draw = False
-            resp_txt = ""
-            result_text = ""
-            resp_txt_no_link = ""
-            retry_count = 5
-            while True:
-                if wss.closed:
-                    break
-                msg = await wss.receive(timeout=900)
-                if not msg.data:
-                    retry_count -= 1
-                    if retry_count == 0:
-                        raise Exception("No response from server")
+        )
+        await self._initial_handshake(wss)
+        # Construct a ChatHub request
+        self.request.update(
+            prompt=prompt,
+            conversation_style=conversation_style,
+            webpage_context=webpage_context,
+            search_result=search_result,
+            locale=locale,
+        )
+        # Send request
+        await wss.send_str(append_identifier(self.request.struct))
+        draw = False
+        resp_txt = ""
+        result_text = ""
+        resp_txt_no_link = ""
+        retry_count = 5
+        while not wss.closed:
+            msg = await wss.receive(timeout=900)
+            if not msg.data:
+                retry_count -= 1
+                if retry_count == 0:
+                    raise Exception("No response from server")
+                continue
+            if isinstance(msg.data, str):
+                objects = msg.data.split(DELIMITER)
+            else:
+                continue
+            for obj in objects:
+                if int(time()) % 6 == 0:
+                    await wss.send_str(append_identifier({"type": 6}))
+                if obj is None or not obj:
                     continue
-                if isinstance(msg.data, str):
-                    objects = msg.data.split(DELIMITER)
-                else:
-                    continue
-                for obj in objects:
-                    if int(time()) % 6 == 0:
-                        await wss.send_str(append_identifier({"type": 6}))
-                    if obj is None or not obj:
-                        continue
-                    response = json.loads(obj)
-                    # print(response)
-                    if response.get("type") == 1 and response["arguments"][0].get(
-                        "messages",
-                    ):
-                        if not draw:
-                            if (
-                                response["arguments"][0]["messages"][0].get(
-                                    "messageType",
-                                )
-                                == "GenerateContentQuery"
-                            ):
-                                async with ImageGenAsync(
-                                    all_cookies=self.cookies
-                                ) as image_generator:
-                                    images = await image_generator.get_images(
-                                        response["arguments"][0]["messages"][0]["text"],
-                                    )
-                                for i, image in enumerate(images):
-                                    resp_txt = f"{resp_txt}\n![image{i}]({image})"
-                                draw = True
-                            if (
-                                response["arguments"][0]["messages"][0]["contentOrigin"]
-                                != "Apology"
-                            ) and not draw and not raw:
-                                resp_txt = result_text + response["arguments"][0][
-                                    "messages"
-                                ][0]["adaptiveCards"][0]["body"][0].get("text", "")
-                                resp_txt_no_link = result_text + response["arguments"][
-                                    0
-                                ]["messages"][0].get("text", "")
-                                if response["arguments"][0]["messages"][0].get(
-                                    "messageType",
-                                ):
-                                    resp_txt = (
-                                        resp_txt
-                                        + response["arguments"][0]["messages"][0][
-                                            "adaptiveCards"
-                                        ][0]["body"][0]["inlines"][0].get("text")
-                                        + "\n"
-                                    )
-                                    result_text = (
-                                        result_text
-                                        + response["arguments"][0]["messages"][0][
-                                            "adaptiveCards"
-                                        ][0]["body"][0]["inlines"][0].get("text")
-                                        + "\n"
-                                    )
-                            if not raw:
-                                yield False, resp_txt
-
-                    elif response.get("type") == 2:
-                        if response["item"]["result"].get("error"):
-                            await self.close()
-                            raise Exception(
-                                f"{response['item']['result']['value']}: {response['item']['result']['message']}",
-                            )
-                        if draw:
-                            id = 1
-                            for i in range(1, len(response["item"]["messages"])):
-                                if "adaptiveCards" in response["item"]["messages"][i]:
-                                    if "text" in response["item"]["messages"][i]["adaptiveCards"][0]["body"][0]:
-                                        id = i
-                                        break
-                            cache=response["item"]["messages"][id]["adaptiveCards"][0]["body"][0]["text"]
-                            response["item"]["messages"][id]["adaptiveCards"][0]["body"][0]["text"] = (cache + resp_txt)
+                response = json.loads(obj)
+                # print(response)
+                if response.get("type") == 1 and response["arguments"][0].get(
+                    "messages",
+                ):
+                    if not draw:
                         if (
-                            response["item"]["messages"][-1]["contentOrigin"]
-                            == "Apology"
-                            and resp_txt
-                        ):
-                            response["item"]["messages"][-1]["text"] = resp_txt_no_link
-                            response["item"]["messages"][-1]["adaptiveCards"][0][
-                                "body"
-                            ][0]["text"] = resp_txt
-                            print(
-                                "Preserved the message from being deleted",
-                                file=sys.stderr,
+                            response["arguments"][0]["messages"][0].get(
+                                "messageType",
                             )
-                        await wss.close()
-                        yield True, response
-                        return
-                    if response.get("type") != 2:
-                        if response.get("type") == 6:
-                            await wss.send_str(append_identifier({"type": 6}))
-                        elif response.get("type") == 7:
-                            await wss.send_str(append_identifier({"type": 7}))
-                        elif raw:
-                            yield False, response
+                            == "GenerateContentQuery"
+                        ):
+                            async with ImageGenAsync(
+                                auth_cookie=os.environ.get('image_gen_cookie')
+                            ) as image_generator:
+                                images = await image_generator.get_images(
+                                    response["arguments"][0]["messages"][0]["text"],
+                                )
+                            for i, image in enumerate(images):
+                                resp_txt = f"{resp_txt}\n![image{i}]({image})"
+                            draw = True
+                        if (
+                            response["arguments"][0]["messages"][0]["contentOrigin"]
+                            != "Apology"
+                        ) and not draw and not raw:
+                            resp_txt = result_text + response["arguments"][0][
+                                "messages"
+                            ][0]["adaptiveCards"][0]["body"][0].get("text", "")
+                            resp_txt_no_link = result_text + response["arguments"][
+                                0
+                            ]["messages"][0].get("text", "")
+                            if response["arguments"][0]["messages"][0].get(
+                                "messageType",
+                            ):
+                                resp_txt = (
+                                    resp_txt
+                                    + response["arguments"][0]["messages"][0][
+                                        "adaptiveCards"
+                                    ][0]["body"][0]["inlines"][0].get("text")
+                                    + "\n"
+                                )
+                                result_text = (
+                                    result_text
+                                    + response["arguments"][0]["messages"][0][
+                                        "adaptiveCards"
+                                    ][0]["body"][0]["inlines"][0].get("text")
+                                    + "\n"
+                                )
+                        if not raw:
+                            yield False, resp_txt
+
+                elif response.get("type") == 2:
+                    if response["item"]["result"].get("error"):
+                        await self.close()
+                        raise Exception(
+                            f"{response['item']['result']['value']}: {response['item']['result']['message']}",
+                        )
+                    if draw:
+                        id = 1
+                        for i in range(1, len(response["item"]["messages"])):
+                            if "adaptiveCards" in response["item"]["messages"][i]:
+                                if "text" in response["item"]["messages"][i]["adaptiveCards"][0]["body"][0]:
+                                    id = i
+                                    break
+                        cache=response["item"]["messages"][id]["adaptiveCards"][0]["body"][0]["text"]
+                        response["item"]["messages"][id]["adaptiveCards"][0]["body"][0]["text"] = (cache + resp_txt)
+                    if (
+                        response["item"]["messages"][-1]["contentOrigin"]
+                        == "Apology"
+                        and resp_txt
+                    ):
+                        response["item"]["messages"][-1]["text"] = resp_txt_no_link
+                        response["item"]["messages"][-1]["adaptiveCards"][0][
+                            "body"
+                        ][0]["text"] = resp_txt
+                        print(
+                            "Preserved the message from being deleted",
+                            file=sys.stderr,
+                        )
+                    await wss.close()
+                    yield True, response
+                    return
+                if response.get("type") != 2:
+                    if response.get("type") == 6:
+                        await wss.send_str(append_identifier({"type": 6}))
+                    elif response.get("type") == 7:
+                        await wss.send_str(append_identifier({"type": 7}))
+                    elif raw:
+                        yield False, response
 
     async def _initial_handshake(self, wss: WebSocketClientProtocol) -> None:
         await wss.send_str(append_identifier({"protocol": "json", "version": 1}))
