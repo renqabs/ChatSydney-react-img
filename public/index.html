@@ -156,7 +156,7 @@
         </div>
     ));
 
-    const EditDialog = ({isOpen, handleClose, handleSubmit, initialData}) => {
+    const EditDialog = ({isOpen, handleClose, handleSubmit, initialData, selectedKey}) => {
         const [data, setData] = React.useState(initialData || {})
         const [error, setError] = React.useState(null)
 
@@ -198,6 +198,9 @@
 
         const handleSave = () => {
             if (!error) {
+                if (data.tag === "[system](#additional_instructions)") {
+                    localStorage.setItem(selectedKey + "Prompt", JSON.stringify([data]));
+                }
                 handleSubmit(data)
                 handleClose()
             }
@@ -308,11 +311,11 @@
         // delete upload image
         formatted = formatted.replace(regex, "");
         if (botType === "Sydney") {
-            if (enc.encode(formatted).length > 10000) {
+            if (enc.encode(formatted).length > 19000) {
                 // Assume the first message is system message
                 const systemMessage = `${messages[0].tag}\n${messages[0].hiddenText ?? messages[0].text}\n\n`
                 const systemMessageTokenCount = enc.encode(systemMessage).length
-                const remainingTokenCountLimit = 10000 - systemMessageTokenCount
+                const remainingTokenCountLimit = 19000 - systemMessageTokenCount
                 let remaining = formatted.slice(systemMessage.length)
                 const remainingTokens = enc.encode(remaining).slice(-remainingTokenCountLimit)
                 remaining = enc.decode(remainingTokens)
@@ -377,7 +380,9 @@
             }
             localStorage.setItem('chatHistory' + selectedKey, JSON.stringify(previousMessages))
             renderMathInElement(document.body, {output: 'mathml'})
-            setContextTokens(enc.encode(formatPreviousMessages(previousMessages)).length)
+            if (!responding) {
+                setContextTokens(enc.encode(formatPreviousMessages(previousMessages)).length)
+            }
         }, [previousMessages])
         const [userInput, setUserInput] = React.useState('')
         const [userInputTokens, setUserInputTokens] = React.useState(0)
@@ -387,6 +392,9 @@
         const [enterMode, setEnterMode] = React.useState('enter')
         const [locale, setLocale] = React.useState('zh-CN')
         const [responding, setResponding] = React.useState(false)
+        React.useEffect(() => {
+            setContextTokens(enc.encode(formatPreviousMessages(previousMessages)).length);
+        }, [responding])
         const [editingMessageIndex, setEditingMessageIndex] = React.useState(null)
         const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
         const [_UOverride, set_UOverride] = React.useState(localStorage.getItem('_U'))
@@ -705,6 +713,8 @@
                     const savedMessages = localStorage.getItem("chatHistory" + selectedKey);
                     localStorage.removeItem("chatHistory" + selectedKey);
                     localStorage.setItem("chatHistory" + renamedKey, savedMessages);
+                    localStorage.setItem(renamedKey + "Prompt", localStorage.getItem(selectedKey + "Prompt"));
+                    localStorage.removeItem(selectedKey + "Prompt")
                     setSelectedKey(renamedKey);
                 }
             }
@@ -713,6 +723,7 @@
         const deleteKey = () => {
             if (selectedKey) {
                 localStorage.removeItem("chatHistory" + selectedKey);
+                localStorage.removeItem(selectedKey + "Prompt");
                 const remainingKeys = Object.keys(localStorage).filter(key => key.startsWith('chatHistory')).map(key => key.replace('chatHistory', ''));
                 setSelectedKey(remainingKeys[0] || '');
             }
@@ -757,7 +768,7 @@
                             onClick={() => {
                               setImageInput("");
                               imageUploadInput.current.value = '';
-                              setPreviousMessages(defaultMessages);
+                              setPreviousMessages(JSON.parse(localStorage.getItem(selectedKey + "Prompt")) ?? defaultMessages);
                             }}
                         >
                             Clear
@@ -875,6 +886,7 @@
                     handleClose={handleEditDialogClose}
                     handleSubmit={handleEditDialogSubmit}
                     initialData={editingMessageIndex !== null ? previousMessages[editingMessageIndex] : null}
+                    selectedKey={selectedKey}
                 />
             </div>
         )
