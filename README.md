@@ -34,9 +34,5 @@ The WebSocket API accepts a JSON object containing the following fields:
 
 - `message`: The user's message.
 - `context`: The context of the conversation, can be any string.
-
-The WebSocket API returns a JSON object containing the following fields:
-
-- `type`: The type of the message, can be the type from Bing response or `error`.
-- `message`: The response from EdgeGPT.
-- `error`: If an error occurs, this field will contain the error message.
+## Voice broadcast
+Only the Edge browser is supported.
