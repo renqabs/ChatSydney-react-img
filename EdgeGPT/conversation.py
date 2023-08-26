@@ -4,7 +4,7 @@ from typing import List
 from typing import Union
 from .constants import HEADER_IMG_UPLOAD
 import httpx
-
+from .ip_rand import get_random_ip
 from .constants import HEADERS_INIT_CONVER
 from .exceptions import NotAllowedToAccess
 
@@ -16,6 +16,7 @@ class Conversation:
         async_mode: bool = False,
         cookies: Union[List[dict], None] = None,
     ) -> None:
+        self.sec_access_token: str | None = None
         if async_mode:
             return
         self.struct: dict = {
@@ -54,7 +55,7 @@ class Conversation:
         )
         if response.status_code != 200:
             print(f"Status code: {response.status_code}")
-            print(response.text)
+            #print(response.text)
             print(response.url)
             raise Exception("Authentication failed")
         try:
@@ -104,7 +105,10 @@ class Conversation:
         async with httpx.AsyncClient(
             proxies=proxy,
             timeout=30,
-            headers=HEADERS_INIT_CONVER,
+            headers={
+                **HEADERS_INIT_CONVER,
+                "x-forwarded-for": get_random_ip(),
+                    },
             transport=transport,
             cookies=formatted_cookies,
         ) as client:
@@ -123,13 +127,13 @@ class Conversation:
                 )
                 if response_img.status_code != 200:
                     print(f"Status code: {response_img.status_code}")
-                    print(response_img.text)
+                    #print(response_img.text)
                     print(response_img.url)
                     raise Exception("Authentication failed")
                 try:
                     self.img_id = response_img.json()
                 except (json.decoder.JSONDecodeError, NotAllowedToAccess) as exc:
-                    print(response_img.text)
+                    #print(response_img.text)
                     raise Exception(
                         "Authentication failed. You have not been accepted into the beta.",
                     ) from exc
@@ -142,18 +146,19 @@ class Conversation:
 
         if response.status_code != 200:
             print(f"Status code: {response.status_code}")
-            print(response.text)
+            #print(response.text)
             print(response.url)
             raise Exception("Authentication failed")
 
         try:
             self.struct = response.json()
         except (json.decoder.JSONDecodeError, NotAllowedToAccess) as exc:
-            print(response.text)
+            #print(response.text)
             raise Exception(
                 "Authentication failed. You have not been accepted into the beta.",
             ) from exc
         if self.struct["result"]["value"] == "UnauthorizedRequest":
             raise NotAllowedToAccess(self.struct["result"]["message"])
+        if 'X-Sydney-Encryptedconversationsignature' in response.headers:
+            self.sec_access_token = response.headers['X-Sydney-Encryptedconversationsignature']
         return self
-

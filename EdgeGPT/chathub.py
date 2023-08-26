@@ -3,7 +3,7 @@ import json
 import os
 import ssl
 import sys
-import random
+import urllib.parse
 from time import time
 from typing import Generator
 from typing import List
@@ -13,7 +13,7 @@ from websockets.client import connect, WebSocketClientProtocol
 import certifi
 import httpx
 from BingImageCreator import ImageGenAsync
-
+from .ip_rand import get_random_ip
 from .constants import DELIMITER
 from .constants import HEADERS
 from .constants import HEADERS_INIT_CONVER
@@ -38,8 +38,9 @@ class ChatHub:
         self.request: ChatHubRequest
         self.loop: bool
         self.task: asyncio.Task
+        self.sec_access_token: str | None = conversation.sec_access_token
         self.request = ChatHubRequest(
-            conversation_signature=conversation.struct["conversationSignature"],
+            conversation_signature=conversation.struct.get("conversationSignature"),
             client_id=conversation.struct["clientId"],
             conversation_id=conversation.struct["conversationId"],
             blobId=conversation.img_id["blobId"],
@@ -99,20 +100,24 @@ class ChatHub:
         locale: str = guess_locale(),
     ) -> Generator[bool, Union[dict, str], None]:
         """ """
+        if self.sec_access_token:
+            wss_link = (
+                "wss://sydney.bing.com/sydney/ChatHub?sec_access_token="
+                + urllib.parse.quote_plus(self.sec_access_token),
+            )
         cookies = {}
         if self.cookies is not None:
             for cookie in self.cookies:
                 cookies[cookie["name"]] = cookie["value"]
         self.aio_session = aiohttp.ClientSession(cookies=cookies)
-        req_header = HEADERS
         # Check if websocket is closed
         wss = await self.aio_session.ws_connect(
             wss_link or "wss://sydney.bing.com/sydney/ChatHub",
             ssl=ssl_context,
             headers={
-                **req_header, 
-                "x-forwarded-for": f"13.{random.randint(104, 107)}.{random.randint(0, 255)}.{random.randint(1, 255)}",
-            },
+                **HEADERS,
+                "x-forwarded-for": get_random_ip(),
+                    },
             proxy=self.proxy,
         )
         await self._initial_handshake(wss)
