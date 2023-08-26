@@ -103,7 +103,7 @@ class ChatHub:
         if self.sec_access_token:
             wss_link = (
                 "wss://sydney.bing.com/sydney/ChatHub?sec_access_token="
-                + urllib.parse.quote_plus(self.sec_access_token),
+                + urllib.parse.quote_plus(self.sec_access_token)
             )
         cookies = {}
         if self.cookies is not None:
