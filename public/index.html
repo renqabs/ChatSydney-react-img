@@ -482,9 +482,6 @@
                     if (!continueOnRevoke) break
                     if (result?.revoked) {
                         inputText = "Continue from your last sentence."
-                    }else if(result?.revoked_auth){
-			            removeLastestMessage()
-                        continue
                     }else {
                         break
                     }
