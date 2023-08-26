@@ -14,22 +14,43 @@ from EdgeGPT.EdgeGPT import Chatbot
 from aiohttp import web
 
 
-async def sydney_process_message(user_message, context, _U, locale, imageInput):
+async def sydney_process_message(user_message, context, _U, KievRPSSecAuth, SRCHHPGUSR, _RwBf, locale, imageInput):
     chatbot = None
-    try:
-        if _U:
-            cookies = list(filter(lambda d: d.get('name') != '_U', loaded_cookies)) + [{"name": "_U", "value": _U}]
-        else:
+    # Set the maximum number of retries
+    max_retries = 5
+    for i in range(max_retries + 1):
+        try:
             cookies = loaded_cookies
-        chatbot = await Chatbot.create(cookies=cookies, proxy=args.proxy, imageInput=imageInput)
-        async for _, response in chatbot.ask_stream(prompt=user_message, conversation_style="creative",raw=True,
-                                                    webpage_context=context, search_result=True, locale=locale):
-            yield response
-    except:
-        yield {"type": "error", "error": traceback.format_exc()}
-    finally:
-        if chatbot:
-            await chatbot.close()
+            if _U:
+                cookies = list(filter(lambda d: d.get('name') != '_U', cookies)) + [{"name": "_U", "value": _U}]
+            if KievRPSSecAuth:
+                cookies = list(filter(lambda d: d.get('name') != 'KievRPSSecAuth', cookies)) + [{"name": "KievRPSSecAuth", "value": KievRPSSecAuth}]
+            if SRCHHPGUSR:
+                cookies = list(filter(lambda d: d.get('name') != 'SRCHHPGUSR', cookies)) + [{"name": "SRCHHPGUSR", "value": SRCHHPGUSR}]
+            if _RwBf:
+                cookies = list(filter(lambda d: d.get('name') != '_RwBf', cookies)) + [{"name": "_RwBf", "value": _RwBf}]
+            chatbot = await Chatbot.create(cookies=cookies, proxy=args.proxy, imageInput=imageInput)
+            async for _, response in chatbot.ask_stream(prompt=user_message, conversation_style="creative",raw=True,
+                                                        webpage_context=context, search_result=True, locale=locale):
+                yield response
+            break
+        except Exception as e:
+            if (
+                "Sorry, you need to login first to access this service." in str(e)
+                or "ServiceClient failure for DeepLeo" in str(e)
+                or "Cannot retrieve user status" in str(e)
+                or "Authentication failed" in str(e)
+                or "conversationSignature" in str(e)
+            ) and i < max_retries:
+                print("Retrying...", i + 1, "attempts.")
+                await asyncio.sleep(2)
+            else:
+                if i == max_retries:
+                    print("Failed after", max_retries, "attempts.")
+                yield {"type": "error", "error": traceback.format_exc()}
+        finally:
+            if chatbot:
+                await chatbot.close()
 
 
 async def claude_process_message(context):
@@ -72,13 +93,16 @@ async def websocket_handler(request):
                 context = request['context']
                 locale = request['locale']
                 _U = request.get('_U')
+                KievRPSSecAuth = request.get('KievRPSSecAuth')
+                SRCHHPGUSR = request.get('SRCHHPGUSR')
+                _RwBf = request.get('_RwBf')
                 if (request.get('imageInput') is not None) and (len(request.get('imageInput')) > 0):
                     imageInput = request.get('imageInput').split(",")[1]
                 else:
                     imageInput = None
                 bot_type = request.get("botType", "Sydney")
                 if bot_type == "Sydney":
-                    async for response in sydney_process_message(user_message, context, _U, locale=locale, imageInput=imageInput):
+                    async for response in sydney_process_message(user_message, context, _U, KievRPSSecAuth, SRCHHPGUSR, _RwBf, locale=locale, imageInput=imageInput):
                         await ws.send_json(response)
                 elif bot_type == "Claude":
                     async for response in claude_process_message(context):
