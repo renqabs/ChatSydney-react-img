@@ -162,7 +162,6 @@ img[alt="bg_upload_image"] {
 }
 
 #image_upload {
-  margin: 10px;
   display: flex;
   align-items: center;
 }
