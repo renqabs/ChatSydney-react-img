@@ -35,4 +35,4 @@ The WebSocket API accepts a JSON object containing the following fields:
 - `message`: The user's message.
 - `context`: The context of the conversation, can be any string.
 ## Voice broadcast
-Only the Edge browser is supported.
+Only the PC Edge browser is supported.
