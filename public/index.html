@@ -401,6 +401,7 @@
         const [KievRPSSecAuthCookie, setKievRPSSecAuthCookie] = React.useState(localStorage.getItem('KievRPSSecAuth'))
         const [SRCHHPGUSRCookie, setSRCHHPGUSRCookie] = React.useState(localStorage.getItem('SRCHHPGUSR'))
         const [_RwBfCookie, set_RwBfCookie] = React.useState(localStorage.getItem('_RwBf'))
+        const [MUIDCookie, setMUIDCookie] = React.useState(localStorage.getItem('MUID'))
         const imageUploadInput = React.useRef(null);
         const [imageInput, setImageInput] = React.useState('')
         const [enableTTS, setEnableTTS] = React.useState(false)
@@ -524,6 +525,7 @@
                 KievRPSSecAuth: KievRPSSecAuthCookie,
                 SRCHHPGUSR: SRCHHPGUSRCookie,
                 _RwBf: _RwBfCookie,
+                MUID: MUIDCookie,
                 locale: locale,
                 imageInput: imageInput,
                 botType
@@ -910,6 +912,12 @@
                                 set_RwBfCookie(event.target.value)
                                 localStorage.setItem('_RwBf', event.target.value)
                             }} value={_RwBfCookie} placeholder="Enter _RwBf cookie"/>
+                        </label>
+                        <label>MUID:&nbsp;
+                            <input onChange={event => {
+                                setMUIDCookie(event.target.value)
+                                localStorage.setItem('MUID', event.target.value)
+                            }} value={MUIDCookie} placeholder="Enter MUID cookie"/>
                         </label>
                     </div>
                 </div>
