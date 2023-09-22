@@ -399,13 +399,13 @@
         const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
         const [_UOverride, set_UOverride] = React.useState(localStorage.getItem('_U'))
         const [KievRPSSecAuthCookie, setKievRPSSecAuthCookie] = React.useState(localStorage.getItem('KievRPSSecAuth'))
-        const [SRCHHPGUSRCookie, setSRCHHPGUSRCookie] = React.useState(localStorage.getItem('SRCHHPGUSR'))
         const [_RwBfCookie, set_RwBfCookie] = React.useState(localStorage.getItem('_RwBf'))
         const [MUIDCookie, setMUIDCookie] = React.useState(localStorage.getItem('MUID'))
         const imageUploadInput = React.useRef(null);
         const [imageInput, setImageInput] = React.useState('')
         const [enableTTS, setEnableTTS] = React.useState(false)
         const [botType, setBotType] = React.useState(localStorage.getItem('botType') || "Sydney")
+        const [botMode, setBotMode] = React.useState(localStorage.getItem('botMode') || "creative")
         const resizeFile = (file, type) =>
             new Promise((resolve) => {
                 Resizer.imageFileResizer(
@@ -523,12 +523,12 @@
                 context: formatPreviousMessages(currentPreviousMessages, botType),
                 _U: _UOverride,
                 KievRPSSecAuth: KievRPSSecAuthCookie,
-                SRCHHPGUSR: SRCHHPGUSRCookie,
                 _RwBf: _RwBfCookie,
                 MUID: MUIDCookie,
                 locale: locale,
                 imageInput: imageInput,
-                botType
+                botType,
+                botMode
             }))
             return new Promise((resolve, reject) => {
                 function finished(result) {
@@ -886,6 +886,19 @@
                             <option value="Sydney">Sydney</option>
                             <option value="Claude">Claude</option>
                         </select>
+                        <select
+                            id="bot-mode-selector"
+                            className="selector"
+                            value={botMode}
+                            onChange={event => {
+                                setBotMode(event.target.value)
+                                localStorage.setItem('botMode', event.target.value)
+                            }}
+                        >
+                            <option value="creative">Creative</option>
+                            <option value="balanced">Balanced</option>
+                            <option value="precise">Precise</option>
+                        </select>
                         <div>Context: {contextTokens} tokens, User Input: {userInputTokens} tokens</div>
                     </div>
                     <div className="cookies-div" style={{display: "flex", justifyContent: "space-between", flexWrap: "wrap"}}>
@@ -900,12 +913,6 @@
                                 setKievRPSSecAuthCookie(event.target.value)
                                 localStorage.setItem('KievRPSSecAuth', event.target.value)
                             }} value={KievRPSSecAuthCookie} placeholder="Enter KievRPSSecAuth cookie"/>
-                        </label>
-                        <label>SRCHHPGUSR:&nbsp;
-                            <input onChange={event => {
-                                setSRCHHPGUSRCookie(event.target.value)
-                                localStorage.setItem('SRCHHPGUSR', event.target.value)
-                            }} value={SRCHHPGUSRCookie} placeholder="Enter SRCHHPGUSR cookie"/>
                         </label>
                         <label>_RwBf:&nbsp;
                             <input onChange={event => {
