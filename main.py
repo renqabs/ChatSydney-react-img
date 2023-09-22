@@ -14,7 +14,7 @@ from EdgeGPT.EdgeGPT import Chatbot
 from aiohttp import web
 
 
-async def sydney_process_message(user_message, context, _U, KievRPSSecAuth, SRCHHPGUSR, _RwBf, MUID, locale, imageInput):
+async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSecAuth, _RwBf, MUID, locale, imageInput):
     chatbot = None
     # Set the maximum number of retries
     max_retries = 5
@@ -25,14 +25,22 @@ async def sydney_process_message(user_message, context, _U, KievRPSSecAuth, SRCH
                 cookies = list(filter(lambda d: d.get('name') != '_U', cookies)) + [{"name": "_U", "value": _U}]
             if KievRPSSecAuth:
                 cookies = list(filter(lambda d: d.get('name') != 'KievRPSSecAuth', cookies)) + [{"name": "KievRPSSecAuth", "value": KievRPSSecAuth}]
-            if SRCHHPGUSR:
-                cookies = list(filter(lambda d: d.get('name') != 'SRCHHPGUSR', cookies)) + [{"name": "SRCHHPGUSR", "value": SRCHHPGUSR}]
             if _RwBf:
                 cookies = list(filter(lambda d: d.get('name') != '_RwBf', cookies)) + [{"name": "_RwBf", "value": _RwBf}]
             if MUID:
                 cookies = list(filter(lambda d: d.get('name') != 'MUID', cookies)) + [{"name": "MUID", "value": MUID}]
+            SRCHHPGUSR = {
+                "creative": "cdxtone=Creative&cdxtoneopts=h3imaginative,gencontentv3,nojbfedge",
+                "precise": "cdxtone=Precise&cdxtoneopts=h3precise,clgalileo,gencontentv3,nojbfedge",
+                "balanced": "cdxtone=Balanced&cdxtoneopts=galileo,fluxhint,glfluxv13,nojbfedge"
+            }
+            cookies += [
+                {
+                    "name": "SRCHHPGUSR",
+                    "value": SRCHHPGUSR[bot_mode]
+                }]
             chatbot = await Chatbot.create(cookies=cookies, proxy=args.proxy, imageInput=imageInput)
-            async for _, response in chatbot.ask_stream(prompt=user_message, conversation_style="creative",raw=True,
+            async for _, response in chatbot.ask_stream(prompt=user_message, conversation_style=bot_mode, raw=True,
                                                         webpage_context=context, search_result=True, locale=locale):
                 yield response
             break
@@ -96,7 +104,6 @@ async def websocket_handler(request):
                 locale = request['locale']
                 _U = request.get('_U')
                 KievRPSSecAuth = request.get('KievRPSSecAuth')
-                SRCHHPGUSR = request.get('SRCHHPGUSR')
                 _RwBf = request.get('_RwBf')
                 MUID = request.get('MUID')
                 if (request.get('imageInput') is not None) and (len(request.get('imageInput')) > 0):
@@ -104,8 +111,9 @@ async def websocket_handler(request):
                 else:
                     imageInput = None
                 bot_type = request.get("botType", "Sydney")
+                bot_mode = request.get("botMode", "creative")
                 if bot_type == "Sydney":
-                    async for response in sydney_process_message(user_message, context, _U, KievRPSSecAuth, SRCHHPGUSR, _RwBf, MUID, locale=locale, imageInput=imageInput):
+                    async for response in sydney_process_message(user_message, bot_mode, context, _U, KievRPSSecAuth, _RwBf, MUID, locale=locale, imageInput=imageInput):
                         await ws.send_json(response)
                 elif bot_type == "Claude":
                     async for response in claude_process_message(context):
