@@ -34,11 +34,7 @@ async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSec
                 "precise": "cdxtone=Precise&cdxtoneopts=h3precise,clgalileo,gencontentv3,nojbfedge",
                 "balanced": "cdxtone=Balanced&cdxtoneopts=galileo,fluxhint,glfluxv13,nojbfedge"
             }
-            cookies += [
-                {
-                    "name": "SRCHHPGUSR",
-                    "value": SRCHHPGUSR[bot_mode]
-                }]
+            cookies = list(filter(lambda d: d.get('name') != 'SRCHHPGUSR', cookies)) + [{"name": "SRCHHPGUSR","value": SRCHHPGUSR[bot_mode]}]
             chatbot = await Chatbot.create(cookies=cookies, proxy=args.proxy, imageInput=imageInput)
             async for _, response in chatbot.ask_stream(prompt=user_message, conversation_style=bot_mode, raw=True,
                                                         webpage_context=context, search_result=True, locale=locale):
