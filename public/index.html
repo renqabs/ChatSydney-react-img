@@ -14,14 +14,14 @@
 <script crossorigin="anonymous" defer onload="renderMathInElement(document.body, {output: 'mathml'})"
         src="./auto-render.min.js"></script>
 <script data-type="module" type="text/babel">
-    import React from 'https://cdn.skypack.dev/react?min'
-    import ReactDOM from 'https://cdn.skypack.dev/react-dom?min'
-    import ReactMarkdown from 'https://cdn.skypack.dev/react-markdown?min'
-    import remarkBreaks from 'https://cdn.skypack.dev/remark-breaks?min'
-    import remarkGfm from 'https://cdn.skypack.dev/remark-gfm@3.0.1?min'
-    import * as Tiktoken from 'https://cdn.skypack.dev/js-tiktoken?min'
+    import React from './cdn.skypack.dev/react.mjs'
+    import ReactDOM from './cdn.skypack.dev/react-dom.mjs'
+    import ReactMarkdown from './cdn.skypack.dev/react-markdown.mjs'
+    import remarkBreaks from './cdn.skypack.dev/remark-breaks.mjs'
+    import remarkGfm from './cdn.skypack.dev/remark-gfm@3.0.1.mjs'
+    import * as Tiktoken from './cdn.skypack.dev/js-tiktoken.mjs'
     import SyntaxHighlighter from './react-syntax-highlighter@15.5.0.mjs'
-    import Resizer from 'https://cdn.skypack.dev/react-image-file-resizer@0.4.8?min'
+    import Resizer from './cdn.skypack.dev/react-image-file-resizer@0.4.8.mjs'
     import {TTS} from './tts.js'
     const speaker = new TTS();
     const enc = Tiktoken.encodingForModel("gpt-4");
