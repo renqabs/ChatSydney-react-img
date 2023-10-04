@@ -12,7 +12,7 @@ import aiohttp
 from websockets.client import connect, WebSocketClientProtocol
 import certifi
 import httpx
-from BingImageCreator import ImageGenAsync
+from .BingImageCreator import ImageGenAsync
 from .ip_rand import get_random_ip
 from .constants import DELIMITER
 from .constants import HEADERS
