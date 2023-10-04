@@ -346,7 +346,8 @@ class ImageGenAsync:
         ]
         for im in normal_image_links:
             if im in bad_images:
-                raise Exception("Bad images")
+                print("Bad images")
+                # raise Exception("Bad images")
         # No images
         if not normal_image_links:
             raise Exception("No images")
