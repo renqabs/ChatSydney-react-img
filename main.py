@@ -47,6 +47,7 @@ async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSec
                 or "Cannot retrieve user status" in str(e)
                 or "Authentication failed" in str(e)
                 or "conversationSignature" in str(e)
+                or "Unhandled Exception" in str(e)
             ) and i < max_retries:
                 print("Retrying...", i + 1, "attempts.")
                 await asyncio.sleep(2)
