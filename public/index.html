@@ -311,11 +311,11 @@
         // delete upload image
         formatted = formatted.replace(regex, "");
         if (botType === "Sydney") {
-            if (enc.encode(formatted).length > 19000) {
+            if (enc.encode(formatted).length > 31000) {
                 // Assume the first message is system message
                 const systemMessage = `${messages[0].tag}\n${messages[0].hiddenText ?? messages[0].text}\n\n`
                 const systemMessageTokenCount = enc.encode(systemMessage).length
-                const remainingTokenCountLimit = 19000 - systemMessageTokenCount
+                const remainingTokenCountLimit = 31000 - systemMessageTokenCount
                 let remaining = formatted.slice(systemMessage.length)
                 const remainingTokens = enc.encode(remaining).slice(-remainingTokenCountLimit)
                 remaining = enc.decode(remainingTokens)
