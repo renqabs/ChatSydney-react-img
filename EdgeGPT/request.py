@@ -43,7 +43,7 @@ class ChatHubRequest:
         if conversation_style:
             if not isinstance(conversation_style, ConversationStyle):
                 conversation_style = getattr(ConversationStyle, conversation_style)
-            options = conversation_style.value
+            options = conversation_style.value.copy()
         message_id = str(uuid.uuid4())
         # Get the current local time
         now_local = datetime.now()
@@ -63,6 +63,11 @@ class ChatHubRequest:
 
         # Get current time
         timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + offset_string
+
+        # disable search
+        if not search_result:
+            options.insert(-1, "nosearchall")
+
         self.struct = {
             "arguments": [
                 {
@@ -137,14 +142,7 @@ class ChatHubRequest:
         }
         if self.blobId:
             self.struct["arguments"][0]["message"]["imageUrl"] = "https://www.bing.com/images/blob?bcid=" + self.blobId
-        if search_result:
-            have_search_result = [
-                "InternalSearchQuery",
-                "InternalSearchResult",
-                "InternalLoaderMessage",
-                "RenderCardRequest",
-            ]
-            self.struct["arguments"][0]["allowedMessageTypes"] += have_search_result
+
         if webpage_context:
             self.struct["arguments"][0]["previousMessages"] = [
                 {

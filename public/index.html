@@ -354,6 +354,7 @@
         const fileInput = React.useRef(null)
         const [acceptSuggestions, setAcceptSuggestions] = React.useState(true)
         const [continueOnRevoke, setContinueOnRevoke] = React.useState(true)
+        const [enableSearch, setEnableSearch] = React.useState(true)
         const handleFileChange = event => {
             const file = event.target.files[0]
             if (file) {
@@ -527,6 +528,7 @@
                 MUID: MUIDCookie,
                 locale: locale,
                 imageInput: imageInput,
+                enableSearch,
                 botType,
                 botMode
             }))
@@ -564,7 +566,7 @@
                             case 'InternalLoaderMessage':
                                 appendMessage({
                                     tag: '[assistant](#LoaderMessage)',
-                                    text: message.text,
+                                    text: message.text || message.hiddenText,
                                     hiddenText: message.hiddenText
                                 })
                                 break
@@ -821,6 +823,9 @@
                     </div>
                 </div>
                 <div className="user-input">
+                    <label htmlFor="search-switch">Enable Search</label>
+                    <input type="checkbox" id="search-switch" checked={enableSearch}
+                           onChange={event => setEnableSearch(event.target.checked)}/>
                     <label htmlFor="suggestion-switch">Accept Suggestions</label>
                     <input type="checkbox" id="suggestion-switch" checked={acceptSuggestions}
                            onChange={event => setAcceptSuggestions(event.target.checked)}/>
