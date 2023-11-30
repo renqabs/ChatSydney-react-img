@@ -334,7 +334,7 @@ class ImageGenAsync:
         normal_image_links = [link.split("?w=")[0] for link in image_links]
         # Remove duplicates
         normal_image_links = list(set(normal_image_links))
-
+        normal_image_links = list(filter(lambda item: "r.bing.com" not in item,normal_image_links))
         # Bad images
         bad_images = [
             "https://r.bing.com/rp/in-2zU3AJUdkgFe7ZKv19yPBHVs.png",
