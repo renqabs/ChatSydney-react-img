@@ -42,7 +42,7 @@ class ConversationStyle(Enum):
         "autosave",
         "iyxapbing",
         "iycapbing",
-        "galileo",
+        "clgalileo",
         "spktxtibmoff",
         "uquopt",
         "enelecintl",
