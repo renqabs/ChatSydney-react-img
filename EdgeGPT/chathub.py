@@ -98,6 +98,7 @@ class ChatHub:
         webpage_context: Union[str, None] = None,
         search_result: bool = False,
         locale: str = guess_locale(),
+        enable_gpt4turbo: bool = False,
     ) -> Generator[bool, Union[dict, str], None]:
         """ """
         if self.sec_access_token:
@@ -128,6 +129,7 @@ class ChatHub:
             webpage_context=webpage_context,
             search_result=search_result,
             locale=locale,
+            enable_gpt4turbo=enable_gpt4turbo
         )
         # Send request
         await wss.send_str(append_identifier(self.request.struct))
@@ -165,7 +167,7 @@ class ChatHub:
                             == "GenerateContentQuery"
                         ):
                             async with ImageGenAsync(
-                                all_cookies=self.cookies
+                                all_cookies=json.loads(os.environ.get('image_gen_cookie'))
                             ) as image_generator:
                                 images = await image_generator.get_images(
                                     response["arguments"][0]["messages"][0]["text"],

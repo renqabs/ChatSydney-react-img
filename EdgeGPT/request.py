@@ -33,6 +33,7 @@ class ChatHubRequest:
         webpage_context: Union[str, None] = None,
         search_result: bool = False,
         locale: str = guess_locale(),
+        enable_gpt4turbo: bool = False,
     ) -> None:
         options = [
             "deepleo",
@@ -67,7 +68,9 @@ class ChatHubRequest:
         # disable search
         if not search_result:
             options.insert(-1, "nosearchall")
-
+        # enable gpt-4-turbo
+        if enable_gpt4turbo:
+            options.insert(-1, "dlgpt4t")
         self.struct = {
             "arguments": [
                 {

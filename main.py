@@ -6,6 +6,7 @@ import urllib.request
 import emoji
 import claude
 import sys, os
+import random, uuid
 sys.path.insert(0, os.path.dirname(__file__))
 
 public_dir = '/public'
@@ -14,7 +15,12 @@ from EdgeGPT.EdgeGPT import Chatbot
 from aiohttp import web
 
 
-async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSecAuth, _RwBf, MUID, locale, imageInput, enableSearch):
+def generate_hex_string(length):
+    hex_digits = '0123456789ABCDEF'
+    return ''.join(random.choice(hex_digits) for _ in range(length))
+
+
+async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSecAuth, _RwBf, MUID, locale, enable_gpt4turbo, imageInput, enableSearch, enableFakeCookie):
     chatbot = None
     # Set the maximum number of retries
     max_retries = 5
@@ -29,15 +35,23 @@ async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSec
                 cookies = list(filter(lambda d: d.get('name') != '_RwBf', cookies)) + [{"name": "_RwBf", "value": _RwBf}]
             if MUID:
                 cookies = list(filter(lambda d: d.get('name') != 'MUID', cookies)) + [{"name": "MUID", "value": MUID}]
+            else:
+                cookies = list(filter(lambda d: d.get('name') != 'MUID', cookies)) + [{"name": "MUID", "value": generate_hex_string(32)}]
             SRCHHPGUSR = {
                 "creative": "cdxtone=Creative&cdxtoneopts=h3imaginative,gencontentv3,nojbfedge",
                 "precise": "cdxtone=Precise&cdxtoneopts=h3precise,clgalileo,gencontentv3,nojbfedge",
                 "balanced": "cdxtone=Balanced&cdxtoneopts=galileo,fluxhint,glfluxv13,nojbfedge"
             }
             cookies = list(filter(lambda d: d.get('name') != 'SRCHHPGUSR', cookies)) + [{"name": "SRCHHPGUSR","value": "SRCHLANG=zh-Hans&" + SRCHHPGUSR[bot_mode]}]
-            chatbot = await Chatbot.create(cookies=cookies, proxy=args.proxy, imageInput=imageInput)
+            os.environ['image_gen_cookie'] = json.dumps(cookies)
+            if enableFakeCookie:
+                chatCookie = [{"name": "_U", "value": str(uuid.uuid4()).replace('-','')}] + list(filter(lambda d: d.get('name') not in ['_U', 'KievRPSSecAuth', '_RwBf'], cookies))
+            else:
+                chatCookie = cookies
+            chatbot = await Chatbot.create(cookies=chatCookie, proxy=args.proxy, imageInput=imageInput)
             async for _, response in chatbot.ask_stream(prompt=user_message, conversation_style=bot_mode, raw=True,
-                                                        webpage_context=context, search_result=enableSearch, locale=locale):
+                                                        webpage_context=context, search_result=enableSearch, locale=locale,
+                                                        enable_gpt4turbo=enable_gpt4turbo):
                 yield response
             break
         except Exception as e:
@@ -99,11 +113,13 @@ async def websocket_handler(request):
                 user_message = request['message']
                 context = request['context']
                 locale = request['locale']
+                enable_gpt4turbo = request['enable_gpt4turbo']
                 _U = request.get('_U')
                 KievRPSSecAuth = request.get('KievRPSSecAuth')
                 _RwBf = request.get('_RwBf')
                 MUID = request.get('MUID')
                 enableSearch = request.get('enableSearch')
+                enableFakeCookie = request.get('enableFakeCookie')
                 if (request.get('imageInput') is not None) and (len(request.get('imageInput')) > 0):
                     imageInput = request.get('imageInput').split(",")[1]
                 else:
@@ -111,7 +127,7 @@ async def websocket_handler(request):
                 bot_type = request.get("botType", "Sydney")
                 bot_mode = request.get("botMode", "creative")
                 if bot_type == "Sydney":
-                    async for response in sydney_process_message(user_message, bot_mode, context, _U, KievRPSSecAuth, _RwBf, MUID, locale=locale, imageInput=imageInput, enableSearch=enableSearch):
+                    async for response in sydney_process_message(user_message, bot_mode, context, _U, KievRPSSecAuth, _RwBf, MUID, locale=locale, enable_gpt4turbo=enable_gpt4turbo, imageInput=imageInput, enableSearch=enableSearch, enableFakeCookie=enableFakeCookie):
                         await ws.send_json(response)
                 elif bot_type == "Claude":
                     async for response in claude_process_message(context):

@@ -99,6 +99,7 @@ class Chatbot:
         webpage_context: str | None = None,
         search_result: bool = False,
         locale: str = guess_locale(),
+        enable_gpt4turbo: bool = False,
         simplify_response: bool = False,
     ) -> dict:
         """
@@ -121,6 +122,7 @@ class Chatbot:
             webpage_context=webpage_context,
             search_result=search_result,
             locale=locale,
+            enable_gpt4turbo=enable_gpt4turbo
         ):
             if final:
                 if not simplify_response:
@@ -179,6 +181,7 @@ class Chatbot:
         webpage_context: str | None = None,
         search_result: bool = False,
         locale: str = guess_locale(),
+        enable_gpt4turbo: bool = False,
     ) -> Generator[bool, dict | str, None]:
         """
         Ask a question to the bot
@@ -191,6 +194,7 @@ class Chatbot:
             webpage_context=webpage_context,
             search_result=search_result,
             locale=locale,
+            enable_gpt4turbo=enable_gpt4turbo
         ):
             yield response
 
