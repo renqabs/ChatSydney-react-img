@@ -149,7 +149,7 @@ class ChatHubRequest:
         if webpage_context:
             self.struct["arguments"][0]["previousMessages"] = [
                 {
-                    "author": "user",
+                    "author": "system",
                     "description": webpage_context,
                     "contextType": "WebPage",
                     "messageType": "Context",
