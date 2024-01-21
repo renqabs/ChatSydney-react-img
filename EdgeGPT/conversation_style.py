@@ -21,8 +21,6 @@ class ConversationStyle(Enum):
         "h3imaginative",
         "clgalileo",
         "gencontentv3",
-        "memdefadcst2",
-        "memmidlat",
         "eredirecturl",
         "nojbfedge"
     ]
@@ -37,7 +35,6 @@ class ConversationStyle(Enum):
         "iyxapbing",
         "iycapbing",
         "clgalileo",
-        "memmidlat",
         "eredirecturl",
         "saharagenconv5",
         "nojbfedge"
@@ -53,11 +50,9 @@ class ConversationStyle(Enum):
         "iyxapbing",
         "iycapbing",
         "h3precise",
-        "memmidlat",
         "eredirecturl",
         "clgalileo",
         "gencontentv3",
-        "memdefadcst2",
         "nojbfedge"
     ]
 
