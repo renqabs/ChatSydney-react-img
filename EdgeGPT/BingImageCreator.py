@@ -3,7 +3,7 @@ import asyncio
 import contextlib
 import json
 import os
-import random
+from urllib import parse
 import sys
 import time
 from functools import partial
@@ -15,7 +15,7 @@ import httpx
 import pkg_resources
 import regex
 import requests
-
+import urllib
 BING_URL = os.getenv("BING_URL", "https://www.bing.com")
 HEADERS = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -94,7 +94,7 @@ class ImageGen:
             print(sending_message)
         if self.debug_file:
             self.debug(sending_message)
-        url_encoded_prompt = requests.utils.quote(prompt)
+        url_encoded_prompt = urllib.parse.quote(prompt)
         payload = f"q={url_encoded_prompt}&qs=ds"
         # https://www.bing.com/images/create?q=<PROMPT>&rt=3&FORM=GENCRE
         url = f"{BING_URL}/images/create?q={url_encoded_prompt}&rt=4&FORM=GENCRE"
@@ -281,14 +281,14 @@ class ImageGenAsync:
         """
         if not self.quiet:
             print("Sending request...")
-        url_encoded_prompt = requests.utils.quote(prompt)
+        url_encoded_prompt = urllib.parse.quote(prompt)
         # https://www.bing.com/images/create?q=<PROMPT>&rt=3&FORM=GENCRE
         url = f"{BING_URL}/images/create?q={url_encoded_prompt}&rt=4&FORM=GENCRE"
         payload = f"q={url_encoded_prompt}&qs=ds"
         response = await self.session.post(
             url,
             follow_redirects=False,
-            data=payload,
+            content=payload,
         )
         content = response.text
         if "this prompt has been blocked" in content.lower():
