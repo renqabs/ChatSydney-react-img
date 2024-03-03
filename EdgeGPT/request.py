@@ -70,7 +70,7 @@ class ChatHubRequest:
             options.insert(-1, "nosearchall")
         # enable gpt-4-turbo
         if enable_gpt4turbo:
-            options.insert(-1, "dlgpt4t")
+            options.insert(-1, "gpt4tmncnp")
         self.struct = {
             "arguments": [
                 {
