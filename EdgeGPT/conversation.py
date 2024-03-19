@@ -102,12 +102,13 @@ class Conversation:
             formatted_cookies = httpx.Cookies()
             for cookie in cookies:
                 formatted_cookies.set(cookie["name"], cookie["value"])
+        os.environ['xff'] = get_random_ip()
         async with httpx.AsyncClient(
             proxies=proxy,
             timeout=30,
             headers={
                 **HEADERS_INIT_CONVER,
-                "x-forwarded-for": get_random_ip(),
+                "x-forwarded-for": os.environ.get('xff'),
                     },
             transport=transport,
             cookies=formatted_cookies,

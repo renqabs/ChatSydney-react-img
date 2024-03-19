@@ -295,7 +295,11 @@
             }]
         }
         let formatted = messages.map(message => {
-            let result = `${message.tag}\n${message.text||""}`
+            let allowedTags = ['[assistant](#message)', '[user](#message)', '[system](#additional_instructions)', '[assistant](#inner_monologue)'];
+            let result = "";
+            if (allowedTags.includes(message.tag)) {
+                result = `${message.tag}\n${message.hiddenText ?? message.text}`;
+            }
 	    /*
             if (message.suggestions) {
                 result += `\n\n[assistant](#suggestions)\n\`\`\`json\n{"suggestedUserResponses": ${JSON.stringify(message.suggestions)}}\n\`\`\``

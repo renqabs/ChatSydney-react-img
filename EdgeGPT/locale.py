@@ -12,17 +12,21 @@ class LocationHint(Enum):
         "locale": "en-US",
         "LocationHint": [
             {
-                "country": "United States",
-                "state": "California",
-                "city": "Los Angeles",
-                "timezoneoffset": 8,
-                "countryConfidence": 8,
+                "SourceType": 1,
+                "RegionType": 2,
                 "Center": {
                     "Latitude": 34.0536909,
                     "Longitude": -118.242766,
                 },
-                "RegionType": 2,
-                "SourceType": 1,
+                "Radius": 24902,
+                "Name": "United States",
+                "Accuracy": 24902,
+                "FDConfidence": 0,
+                "CountryName": "United States",
+                "CountryConfidence": 9,
+                "PopulatedPlaceConfidence": 0,
+                "UtcOffset": 8,
+                "Dma": 0
             },
         ],
     }
@@ -30,17 +34,21 @@ class LocationHint(Enum):
         "locale": "zh-CN",
         "LocationHint": [
             {
-                "country": "China",
-                "state": "",
-                "city": "Beijing",
-                "timezoneoffset": 8,
-                "countryConfidence": 8,
+                "SourceType": 1,
+                "RegionType": 2,
                 "Center": {
                     "Latitude": 39.9042,
                     "Longitude": 116.4074,
                 },
-                "RegionType": 2,
-                "SourceType": 1,
+                "Radius": 24902,
+                "Name": "China",
+                "Accuracy": 24902,
+                "FDConfidence": 0,
+                "CountryName": "China",
+                "CountryConfidence": 9,
+                "PopulatedPlaceConfidence": 0,
+                "UtcOffset": 8,
+                "Dma": 0
             },
         ],
     }
@@ -48,17 +56,22 @@ class LocationHint(Enum):
         "locale": "en-IE",
         "LocationHint": [
             {
-                "country": "Norway",
-                "state": "",
-                "city": "Oslo",
-                "timezoneoffset": 1,
-                "countryConfidence": 8,
+
+                "SourceType": 1,
+                "RegionType": 2,
                 "Center": {
                     "Latitude": 59.9139,
                     "Longitude": 10.7522,
                 },
-                "RegionType": 2,
-                "SourceType": 1,
+                "Radius": 24902,
+                "Name": "Norway",
+                "Accuracy": 24902,
+                "FDConfidence": 0,
+                "CountryName": "Norway",
+                "CountryConfidence": 8,
+                "PopulatedPlaceConfidence": 0,
+                "UtcOffset": 1,
+                "Dma": 0
             },
         ],
     }
@@ -66,17 +79,21 @@ class LocationHint(Enum):
         "locale": "en-GB",
         "LocationHint": [
             {
-                "country": "United Kingdom",
-                "state": "",
-                "city": "London",
-                "timezoneoffset": 0,
-                "countryConfidence": 8,
+                "SourceType": 1,
+                "RegionType": 2,
                 "Center": {
                     "Latitude": 51.5074,
                     "Longitude": -0.1278,
                 },
-                "RegionType": 2,
-                "SourceType": 1,
+                "Radius": 24902,
+                "Name": "United Kingdom",
+                "Accuracy": 24902,
+                "FDConfidence": 0,
+                "CountryName": "United Kingdom",
+                "CountryConfidence": 8,
+                "PopulatedPlaceConfidence": 0,
+                "UtcOffset": 0,
+                "Dma": 0
             },
         ],
     }

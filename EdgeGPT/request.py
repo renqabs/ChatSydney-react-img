@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import datetime
 from typing import Union
@@ -79,6 +80,7 @@ class ChatHubRequest:
                     "allowedMessageTypes": [
                         "ActionRequest",
                         "Chat",
+                        "ConfirmationCard",
                         "Context",
                         "InternalSearchQuery",
                         "InternalSearchResult",
@@ -86,42 +88,27 @@ class ChatHubRequest:
                         "InternalLoaderMessage",
                         "Progress",
                         "RenderCardRequest",
+                        "RenderContentRequest",
                         "AdsQuery",
                         "SemanticSerp",
                         "GenerateContentQuery",
                         "SearchQuery",
+                        "GeneratedCode",
+                        "InternalTasksMessage"
                     ],
-                    "sliceIds": [
-                        "winmuid1tf",
-                        "styleoff",
-                        "ccadesk",
-                        "smsrpsuppv4cf",
-                        "ssrrcache",
-                        "contansperf",
-                        "crchatrev",
-                        "winstmsg2tf",
-                        "creatgoglt",
-                        "creatorv2t",
-                        "sydconfigoptt",
-                        "adssqovroff",
-                        "530pstho",
-                        "517opinion",
-                        "418dhlth",
-                        "512sprtic1s0",
-                        "emsgpr",
-                        "525ptrcps0",
-                        "529rweas0",
-                        "515oscfing2s0",
-                        "524vidansgs0",
-                    ],
+                    "sliceIds": [],
                     "verbosity": "verbose",
+                    "scenario": "SERP",
                     "traceId": get_ran_hex(32),
+                    "gptId": "copilot",
                     "isStartOfSession": self.invocation_id == 3,
+                    "requestId": message_id,
                     "message": {
                         "locale": locale,
                         "market": locale,
                         "region": locale[-2:],  # en-US -> US
                         "locationHints": get_location_hint_from_locale(locale),
+                        "userIpAddress": "",
                         "timestamp": timestamp,
                         "author": "user",
                         "inputMethod": "Keyboard",
@@ -131,12 +118,11 @@ class ChatHubRequest:
                         "requestId": message_id,
                     },
                     "tone": conversation_style.name.capitalize(),  # Make first letter uppercase
-                    "requestId": message_id,
-                    "conversationSignature": self.conversation_signature,
+                    "spokenTextMode": "None",
+                    "conversationId": self.conversation_id,
                     "participant": {
                         "id": self.client_id,
                     },
-                    "conversationId": self.conversation_id,
                 },
             ],
             "invocationId": str(self.invocation_id),
@@ -145,7 +131,8 @@ class ChatHubRequest:
         }
         if self.blobId:
             self.struct["arguments"][0]["message"]["imageUrl"] = "https://www.bing.com/images/blob?bcid=" + self.blobId
-
+        if self.conversation_signature:
+            self.struct["arguments"][0]["conversation_signature"] = self.conversation_signature
         if webpage_context:
             self.struct["arguments"][0]["previousMessages"] = [
                 {
@@ -157,5 +144,4 @@ class ChatHubRequest:
                 },
             ]
         self.invocation_id += 1
-
         # print(timestamp)

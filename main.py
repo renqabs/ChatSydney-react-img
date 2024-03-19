@@ -23,7 +23,7 @@ def generate_hex_string(length):
 async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSecAuth, _RwBf, MUID, locale, enable_gpt4turbo, imageInput, enableSearch, enableFakeCookie):
     chatbot = None
     # Set the maximum number of retries
-    max_retries = 5
+    max_retries = 10
     for i in range(max_retries + 1):
         try:
             cookies = loaded_cookies
@@ -35,8 +35,6 @@ async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSec
                 cookies = list(filter(lambda d: d.get('name') != '_RwBf', cookies)) + [{"name": "_RwBf", "value": _RwBf}]
             if MUID:
                 cookies = list(filter(lambda d: d.get('name') != 'MUID', cookies)) + [{"name": "MUID", "value": MUID}]
-            else:
-                cookies = list(filter(lambda d: d.get('name') != 'MUID', cookies)) + [{"name": "MUID", "value": generate_hex_string(32)}]
             SRCHHPGUSR = {
                 "creative": "cdxtone=Creative&cdxtoneopts=h3imaginative,gencontentv3,nojbfedge",
                 "precise": "cdxtone=Precise&cdxtoneopts=h3precise,clgalileo,gencontentv3,nojbfedge",
@@ -64,7 +62,7 @@ async def sydney_process_message(user_message, bot_mode, context, _U, KievRPSSec
                 or "Unhandled Exception" in str(e)
             ) and i < max_retries:
                 print("Retrying...", i + 1, "attempts.")
-                await asyncio.sleep(2)
+                await asyncio.sleep(0.1)
             else:
                 if i == max_retries:
                     print("Failed after", max_retries, "attempts.")
